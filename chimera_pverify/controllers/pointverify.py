@@ -12,7 +12,7 @@ from chimera.interfaces.camera import Shutter
 from chimera.interfaces.pointverify import PointVerify as IPointVerify
 from chimera.interfaces.telescope import SlewRate
 from chimera.util.astrometrynet import AstrometryNet, NoSolutionAstrometryNetException
-from chimera.util.catalogs.landolt import Landolt
+from chimera_pverify.util.catalogs.landolt import Landolt
 from chimera.util.coord import Coord
 from chimera.util.image import ImageUtil, Image
 from chimera.util.position import Position
