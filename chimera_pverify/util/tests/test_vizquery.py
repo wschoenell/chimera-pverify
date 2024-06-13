@@ -1,6 +1,6 @@
-
-from chimera.util.vizquery import VizQuery
 from chimera.util.position import Position
+from chimera_pverify.util.vizquery import VizQuery
+
 
 class TestVizQuery (object):
 

@@ -1,9 +1,8 @@
-from chimera.util.votable import VOTable
-
 from http.client import HTTPConnection
 import tempfile
-import os
 import urllib.request, urllib.parse, urllib.error
+
+from chimera_pverify.util.votable import VOTable
 
 
 class VizQuery(object):
