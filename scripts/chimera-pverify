@@ -1,32 +1,15 @@
-#!/usr/bin/python
-# -*- coding: iso-8859-1 -*-
-
-# chimera - observatory automation system
-# Copyright (C) 2006-2007  P. Henrique Silva <henrique@astro.ufsc.br>
-
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301, USA.
-
+#!/usr/bin/env python
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: 2006-present William Schoenell <wschoenell@gmail.com>
 
 import sys
 
-from chimera.core.cli import ChimeraCLI, action
-from chimera.core.compat import freeze_support
+from chimera.cli.cli import ChimeraCLI, action
+
+# from chimera.core.compat import freeze_support
 from chimera.interfaces.pointverify import CanSetScopeButNotThisField, CantSetScopeException
-from chimera.util.astrometrynet import NoSolutionAstrometryNetException
-from chimera.util.astrometrynet import AstrometryNet
+from chimera_pverify.util.astrometrynet import NoSolutionAstrometryNetException
+from chimera_pverify.util.astrometrynet import AstrometryNet
 
 
 class ChimeraPointVerify(ChimeraCLI):
@@ -35,82 +18,100 @@ class ChimeraPointVerify(ChimeraCLI):
         # the first entry is how the script will be called
         # the second entry is an English language description of the script
         ChimeraCLI.__init__(self, "chimera-pverify", "Point Verifier", 0.1)
-        self.addHelpGroup("PVERIFY", "PVerify")
-        self.addController(name="pverify", cls="PointVerify", required=True, helpGroup="PVERIFY",
-                           help="Pointing verification controller to be used")
-        # self.addParameters(
-        #     dict(name="pverify_file", long="fname", type="string", helpGroup="PVERIFY", help="Does astrometry on file",
+        self.add_help_group("PVERIFY", "PVerify")
+        self.add_controller(
+            name="pverify",
+            cls="PointVerify",
+            required=True,
+            help_group="PVERIFY",
+            help="Pointing verification controller to be used",
+        )
+        # self.add_parameters(
+        #     dict(name="pverify_file", long="fname", type="string", help_group="PVERIFY", help="Does astrometry on file",
         #          metavar="FILE"))
 
-        self.addParameters(dict(name="nfields", long="nfields", type="int", helpGroup="PVERIFY",
-                                help="Number of fields to verify", default=1))
-        self.addParameters(dict(name="binning", help="Use binning to expose", helpGroup="PVERIFY"))
+        # self.add_parameters(
+        #     dict(
+        #         name="nfields",
+        #         int="nfields",
+        #         type="int",
+        #         help_group="PVERIFY",
+        #         help="Number of fields to verify",
+        #         default=1,
+        #     )
+        # )
+        # self.add_parameters(dict(name="binning", help="Use binning to expose", help_group="PVERIFY"))
 
     # ok, looks like action establishes that the following method is some
     # action performed by this script
-    @action(long="choose",
-            help="Chooses a field to point the scope to, moves the scope, takes an image and verifies the pointing",
-            helpGroup="PVERIFY")
-    def checkPointing(self, options):
+    # @action(int="choose",
+    #         help="Chooses a field to point the scope to, moves the scope, takes an image and verifies the pointing",
+    #         helpGroup="PVERIFY")
+    def check_pointing(self, options):
         """
-        Chooses a field to point the scope to, moves the scope, 
+        Chooses a field to point the scope to, moves the scope,
         takes an image and verifies the pointing
         """
         self.out("Choosing a field in the sky, moving scope and taking images")
         for i_field in range(options.nfields):
             try:
-                    self.pverify.setCurrentField(i_field)
-                    self.pverify.checkPointing()
+                self.pverify.set_current_field(i_field)
+                self.pverify.check_pointing()
             # what is this e for ???
             except CantSetScopeException:
                 self.exit("Can't set scope")
-            raw_input("Field %d OK. Press ENTER for next..." % i_field)
+            input(f"Field {i_field:d} OK. Press ENTER for next...")
 
-    @action(long="file",
-            type="string",
-            help="Does astrometry on file",
-            helpGroup="PVERIFY")
-    def file(self, options):
-        """
-        Returns a new image with new WCS
-        """
-        self.out("Doing astrometry on file : %s\n", options.file)
-        try:
-            AstrometryNet.solveField(options.file, findstarmethod="sex")
-        except NoSolutionAstrometryNetException:
-            try:
-                AstrometryNet.solveField(
-                    options.file, findstarmethod="astrometry.net")
-            except NoSolutionAstrometryNetException:
-                self.exit("Can't set scope")
-        self.out("OK")
-
-    @action(long="here",
-            help="Takes an image where telescope is pointed to, tries to find image RA, DEC, and tries to recenter the telescope",
-            helpGroup="PVERIFY")
-    def checkHere(self, options):
+    # @action(int="file",
+    #         type="string",
+    #         help="Does astrometry on file",
+    #         helpGroup="PVERIFY")
+    # def file(self, options):
+    #     """
+    #     Returns a new image with new WCS
+    #     """
+    #     self.out(f"Doing astrometry on file : {options.file}\n")
+    #     try:
+    #         AstrometryNet.solve_field(options.file, find_star_method="sex")
+    #     except NoSolutionAstrometryNetException:
+    #         try:
+    #             AstrometryNet.solve_field(
+    #                 options.file, find_star_method="astrometry.net")
+    #         except NoSolutionAstrometryNetException:
+    #             self.exit("Can't set scope")
+    #     self.out("OK")
+    @action(
+        short="H",
+        long="--here",
+        help="Takes an image where telescope is pointed to, tries to find image RA, DEC, and tries to recenter the telescope",
+        help_group="PVERIFY",
+    )
+    # @action(int="here",
+    def check_here(self, options):
         """
         Takes an image where telescope is pointed to,
         tries to find image RA, DEC,
         and tries to recenter the telescope
         """
 
-        # Check binning
+        # # Check binning
 
-        if options.binning:
-            binnings = self.pverify.getCam().getBinnings()
-            if options.binning not in binnings.keys():
-                self.exit("Invalid binning mode. See chimera-cam --info for available binning modes")
-            imageRequest = dict(binning=options.binning)
-        else:
-            imageRequest = dict()
+        # if options.binning:
+        #     binnings = self.pverify.get_cam().get_binnings()
+        #     if options.binning not in list(binnings.keys()):
+        #         self.exit("Invalid binning mode. See chimera-cam --info for available binning modes")
+        #     imageRequest = dict(binning=options.binning)
+        # else:
+        image_request = dict()
 
         self.out("Centering scope on current field")
         try:
             self.pverify.ntrials = 0
-            self.pverify.pointVerify(imageRequest)
+            self.pverify.point_verify(image_request)
         except CanSetScopeButNotThisField:
-            self.out("The scope has been set on a standard field but it is impossible to set on this - either spotty clouds or too faint stars")
+            self.out(
+                "The scope has been set on a standard field but it is impossible to set on this - either spotty clouds or too faint stars"
+            )
         self.out("OK")
 
 
@@ -120,6 +121,6 @@ def main():
     cli.wait()
 
 
-if __name__ == '__main__':
-    freeze_support()
+if __name__ == "__main__":
+    # freeze_support()
     main()

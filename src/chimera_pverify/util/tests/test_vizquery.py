@@ -6,14 +6,14 @@ class TestVizQuery (object):
 
     def test_find (self):
         x = VizQuery()
-        x.useCat("II/183A/")
-        x.useColumns("*POS_EQ_RA_MAIN,*POS_EQ_DEC_MAIN,*ID_MAIN,Vmag,_r",
-                     sortBy="*POS_EQ_RA_MAIN")
-        x.useTarget(Position.fromRaDec("14:00:00","-22:00:00"),radius=45)
+        x.use_cat("II/183A/")
+        x.use_columns("*POS_EQ_RA_MAIN,*POS_EQ_DEC_MAIN,*ID_MAIN,Vmag,_r",
+                     sort_by="*POS_EQ_RA_MAIN")
+        x.use_target(Position.fromRaDec("14:00:00","-22:00:00"),radius=45)
         
         data = x.find(limit=5)
 
         for obj in data:
             for k,v in list(obj.items()):
-                print(k, v)
+                print((k, v))
             print()

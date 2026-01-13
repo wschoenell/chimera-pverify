@@ -13,66 +13,69 @@ log = logging.getLogger(__name__)
 class AstrometryNet:
     # staticmethod allows to use a single method of a class
     @staticmethod
-    def solveField(fullfilename, findstarmethod="astrometry.net"):
+    def solve_field(full_filename, find_star_method="astrometry.net"):
         """
-        @param: fullfilename entire path to image
+        @param: full_filename entire path to image
         @type: str
 
-        @param: findstarmethod (astrometry.net, sex)
+        @param: find_star_method (astrometry.net, sex)
         @type: str
 
-        Does astrometry to image=fullfilename
+        Does astrometry to image=full_filename
         Uses either astrometry.net or sex(tractor) as its star finder
         """
 
-        pathname, filename = os.path.split(fullfilename)
+        pathname, filename = os.path.split(full_filename)
         pathname = pathname + "/"
         basefilename, file_xtn = os.path.splitext(filename)
         # *** enforce .fits extension
         if file_xtn != ".fits":
-            raise ValueError("File extension must be .fits it was = %s\n" % file_xtn)
+            raise ValueError(f"File extension must be .fits it was = {file_xtn}\n")
 
         # *** check whether the file exists or not
-        if os.path.exists(fullfilename) == False:
-            raise IOError("You selected image %s  It does not exist\n" % fullfilename)
+        if os.path.exists(full_filename) == False:
+            raise IOError(f"You selected image {full_filename}  It does not exist\n")
 
         # version 0.23 changed behavior of --overwrite
         # I need to specify an output filename with -o
         outfilename = basefilename + "-out"
 
-        image = Image.fromFile(fullfilename)
+        image = Image.from_file(full_filename)
         try:
             ra = image["CRVAL1"]  # expects to see this in image
         except:
-            raise AstrometryNetException("Need CRVAL1 and CRVAL2 and CD1_1 on header")
+            raise AstrometryNetException("Need CRVAL1 on header")
         try:
             dec = image["CRVAL2"]
         except:
-            raise AstrometryNetException("Need CRVAL1 and CRVAL2 and CD1_1 on header")
+            raise AstrometryNetException("Need CRVAL2 on header")
         width = image["NAXIS1"]
         height = image["NAXIS2"]
-        radius = 10.0 * abs(image["CD1_1"]) * width
+        if "CD1_1" in image:
+            radius = 10.0 * abs(image["CD1_1"]) * width
+        else:
+            radius = 1.0  # default radius if no CD1_1 found (degrees)
 
         wcs_filename = pathname + outfilename + ".wcs"
 
-        if findstarmethod == "astrometry.net":
-            line = "solve-field %s --no-plots --overwrite -o %s --ra %f --dec %f --radius %f" % (
-                fullfilename, outfilename, ra, dec, radius)
-        elif findstarmethod == "sex":
+        if find_star_method == "astrometry.net":
+            line = f"solve-field {full_filename} --no-plots --overwrite -o {outfilename} --ra {ra:f} --dec {dec:f} --radius {radius:f}"
+        elif find_star_method == "sex":
             sexoutfilename = pathname + outfilename + ".xyls"
-            line = "solve-field %s --no-plots --overwrite -o %s --x-column X_IMAGE --y-column Y_IMAGE " \
-                   "--sort-column MAG_ISO --sort-ascending --width %d --height %d --ra %f --dec %f --radius %f" % (
-                       sexoutfilename, outfilename, width, height, ra, dec, radius)
+            line = (
+                f"solve-field {sexoutfilename} --no-plots --overwrite -o {outfilename} --x-column X_IMAGE --y-column Y_IMAGE "
+                f"--sort-column MAG_ISO --sort-ascending --width {width:d} --height {height:d} --ra {ra:f} --dec {dec:f} --radius {radius:f}"
+            )
 
             sex = SExtractor()
-            sex.config['BACK_TYPE'] = "AUTO"
-            sex.config['DETECT_THRESH'] = 3.0
-            sex.config['DETECT_MINAREA'] = 18.0
-            sex.config['VERBOSE_TYPE'] = "QUIET"
-            sex.config['CATALOG_TYPE'] = "FITS_1.0"
-            sex.config['CATALOG_NAME'] = sexoutfilename
-            sex.config['PARAMETERS_LIST'] = ["X_IMAGE", "Y_IMAGE", "MAG_ISO"]
-            sex.run(fullfilename)
+            sex.config["BACK_TYPE"] = "AUTO"
+            sex.config["DETECT_THRESH"] = 3.0
+            sex.config["DETECT_MINAREA"] = 18.0
+            sex.config["VERBOSE_TYPE"] = "QUIET"
+            sex.config["CATALOG_TYPE"] = "FITS_1.0"
+            sex.config["CATALOG_NAME"] = sexoutfilename
+            sex.config["PARAMETERS_LIST"] = ["X_IMAGE", "Y_IMAGE", "MAG_ISO"]
+            sex.run(full_filename)
 
         else:
             log.error("Unknown option used in astrometry.net")
@@ -83,19 +86,20 @@ class AstrometryNet:
         # if it is already there, make sure to delete it
         if os.path.exists(is_solved):
             os.remove(is_solved)
-        log.debug("SOLVE %s" % line)
+        log.debug(f"SOLVE {line}")
         # *** it would be nice to add a test here to check
         # whether astrometrynet is running OK, if not raise a new exception
         # like AstrometryNetInstallProblem
-        log.debug('Starting solve-field...')
+        log.debug("Starting solve-field...")
         t0 = time.time()
         solve = Popen(line.split())  # ,env=os.environ)
         solve.wait()
-        log.debug('Solve field finished. Took %3.2f sec' % (time.time() - t0))
+        log.debug(f"Solve field finished. Took {time.time() - t0:3.2f} sec")
         # if solution failed, there will be no file .solved
-        if (os.path.exists(is_solved) == False):
+        if os.path.exists(is_solved) == False:
             raise NoSolutionAstrometryNetException(
-                "Astrometry.net could not find a solution for image: %s %s" % (fullfilename, is_solved))
+                f"Astrometry.net could not find a solution for image: {full_filename} {is_solved}"
+            )
 
         return wcs_filename
 

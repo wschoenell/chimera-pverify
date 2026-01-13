@@ -17,23 +17,23 @@ class VizQuery(object):
         self.args["-mime"] = "xml"
         self.columns = None
 
-    def useCat(self, catName):
+    def use_cat(self, cat_name):
         """
-        @param catName: the catalog's name in Vizier
-        @type catName: str
+        @param cat_name: the catalog's name in Vizier
+        @type cat_name: str
 
         Simply sets the catalog's name
         """
 
-        self.args["-source"] = catName
+        self.args["-source"] = cat_name
 
-    def useColumns(self, columns, sortBy, reverse=False):
+    def use_columns(self, columns, sort_by, reverse=False):
         """
         @param columns: list of catalog's columns to use
         @type columns: list
 
-        @param sortBy: define which column to sort by
-        @type sortBy: str
+        @param sort_by: define which column to sort by
+        @type sort_by: str
 
         @param reverse: decide to reverse sort @type reverse: bool
 
@@ -46,18 +46,18 @@ class VizQuery(object):
         self.args["-out"] = columns
 
         if reverse:
-            self.args["-sort"] = "-" + sortBy
+            self.args["-sort"] = "-" + sort_by
         else:
-            self.args["-sort"] = sortBy
+            self.args["-sort"] = sort_by
 
-    def sortBy(self, column):
+    def sort_by(self, column):
         """
         One sets here which column to sort by
         @param column: name of column to sort by
         @type  column: str
         """
 
-    def constrainColumns(self, columns):
+    def constrain_columns(self, columns):
         """
         Use this to add constraints to any of the columns
         @param columns: list of dictionaries {COLUMN:condition}
@@ -65,7 +65,7 @@ class VizQuery(object):
         """
         self.args.update(columns)
 
-    def useTarget(self, center, radius=None, box=None):
+    def use_target(self, center, radius=None, box=None):
         """
         @param center: center of search in catalog
         @type center: L{Position}
@@ -98,7 +98,7 @@ class VizQuery(object):
 
         """
 
-        assert "-c.rd" in self.args or "-c.bd" in self.args, "No target selected, use useTarget method first."
+        assert "-c.rd" in self.args or "-c.bd" in self.args, "No target selected, use use_target method first."
 
         self.args["-out.max"] = limit
 

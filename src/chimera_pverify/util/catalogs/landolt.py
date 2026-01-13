@@ -20,23 +20,23 @@ class Landolt (VizQuery, Catalog):
     def __init__(self):
         VizQuery.__init__(self)
 
-    def getName(self):
+    def get_name(self):
         return "Landolt"
 
     def find(self, near=None, limit=9999, **conditions):
 
-        self.useCat("II/183A/")
+        self.use_cat("II/183A/")
 
         if conditions.get("closest", False):
             limit = 1
-            self.useColumns(
-                "*POS_EQ_RA_MAIN,*POS_EQ_DEC_MAIN,*ID_MAIN,Vmag,_r", sortBy="_r")
+            self.use_columns(
+                "*POS_EQ_RA_MAIN,*POS_EQ_DEC_MAIN,*ID_MAIN,Vmag,_r", sort_by="_r")
         else:
-            self.useColumns(
-                "*POS_EQ_RA_MAIN,*POS_EQ_DEC_MAIN,*ID_MAIN,Vmag,_r", sortBy="*POS_EQ_RA_MAIN")
+            self.use_columns(
+                "*POS_EQ_RA_MAIN,*POS_EQ_DEC_MAIN,*ID_MAIN,Vmag,_r", sort_by="*POS_EQ_RA_MAIN")
 
         if near:
-            self.useTarget(near, radius=conditions.get("radius", 45))
+            self.use_target(near, radius=conditions.get("radius", 45))
 
         x = super(Landolt, self).find(limit)
 
@@ -59,6 +59,6 @@ if __name__ == '__main__':
     lat = "00:00:00"
     coords = Position.fromRaDec(lst, lat)
     test = Landolt()
-    test.useTarget(coords, radius=45)
+    test.use_target(coords, radius=45)
     obj = test.find(limit=1)
     print(obj)
